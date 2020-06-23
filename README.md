@@ -16,7 +16,7 @@ First you need to add the UpdateChecker as a dependency to your pom.xml:
     <dependency>
         <groupId>de.jeff_media</groupId>
 	    <artifactId>PluginUpdateChecker</artifactId>
-	    <version>1.0</version>
+	    <version>1.1</version>
     </dependency>
 </dependencies>
 ```
