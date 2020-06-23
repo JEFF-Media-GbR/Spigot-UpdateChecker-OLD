@@ -21,6 +21,32 @@ First you need to add the UpdateChecker as a dependency to your pom.xml:
 </dependencies>
 ```
 
+It is also important to use the maven-shade-plugin as a plugin inside your <plugins> section. Please do not forget to insert your own plugin's package name inside <shadedPattern>.
+
+```
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-shade-plugin</artifactId>
+  <version>3.1.0</version>
+    <configuration>
+      <relocations>
+        <relocation>
+          <pattern>de.jeff_media.PluginUpdateChecker</pattern>
+          <shadedPattern>[Your plugin's package name]</shadedPattern>
+        </relocation>
+      </relocations>
+    </configuration>
+  <executions>
+    <execution>
+      <phase>package</phase>
+      <goals>
+        <goal>shade</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+```
+
 ## Usage
 Now you can create an instance of the PluginUpdateChecker class, e.g. in your onEnable method:
 

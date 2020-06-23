@@ -160,6 +160,7 @@ public class PluginUpdateChecker {
     }
 
     private void printCheckResult() {
+        String n = System.lineSeparator();
         if (latestVersion.equals(currentVersion)) {
             plugin.getLogger().info(String.format("You are using the latest version of %s.",plugin.getName()));
         } else {
@@ -187,7 +188,13 @@ public class PluginUpdateChecker {
                     String inputLine = reader.readLine().trim();
                     latestVersion = inputLine;
                     currentVersion = plugin.getDescription().getVersion().trim();
-                    printCheckResult();
+                    Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                       @Override
+                       public void run() {
+                           printCheckResult();
+                       }
+                    });
+                    //printCheckResult();
                     reader.close();
                 } catch (Exception e) {
                     plugin.getLogger().warning("Could not check for updates.");
