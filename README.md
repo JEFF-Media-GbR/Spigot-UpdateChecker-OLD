@@ -47,6 +47,8 @@ It is also important to use the maven-shade-plugin as a plugin inside your <plug
 </plugin>
 ```
 
+You can view an example of a pom.xml containing the above content [HERE](https://github.com/JEFF-Media-GbR/Spigot-UpdateChecker/blob/master/example-pom.xml).
+
 ## Usage
 Now you can create an instance of the PluginUpdateChecker class, e.g. in your onEnable method:
 
