@@ -76,7 +76,7 @@ public class PluginUpdateChecker implements Listener {
      * Checks for an update
      */
     public void check() {
-        checkForUpdate();
+        checkForUpdateAsync();
     }
 
     /**
@@ -86,7 +86,7 @@ public class PluginUpdateChecker implements Listener {
      * @return Task id number (-1 if scheduling failed)
      */
     public int check(long checkInterval) {
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, this::checkForUpdate, 0L, checkInterval * 20);
+        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, this::checkForUpdateAsync, 0L, checkInterval * 20);
         return taskId;
     }
 
@@ -95,6 +95,20 @@ public class PluginUpdateChecker implements Listener {
      */
     public void stop() {
         Bukkit.getScheduler().cancelTask(taskId);
+    }
+
+    /**
+     * Forces a synced update check. You should only use this if you need a check result immediately (e.g. because you want to disable your plugin if there is a new version released) because it will block the main thread until the update check has completed or a timeout occured.
+     * @return true if a new update is available, false if update check failed of this is the current version
+     */
+    public boolean forceSyncedCheck() {
+        checkForUpdate();
+        return isNewVersionAvailable();
+    }
+
+    private boolean isNewVersionAvailable() {
+        if(latestVersion.equals("undefined")) return false;
+        return !latestVersion.equals(currentVersion);
     }
 
     private TextComponent createLink(String text, String link) {
@@ -164,6 +178,10 @@ public class PluginUpdateChecker implements Listener {
         }
     }
 
+    private String getUserAgent() {
+        return "JEFF-Media-GbR-PluginUpdateChecker/" + VERSION + " (" + plugin.getName() + "/" + plugin.getDescription().getVersion() + ", MC/" + mcVersion + ", Online/" + plugin.getServer().getOnlinePlayers().size() + ", Players/" + plugin.getServer().getOfflinePlayers().length + ")";
+    }
+
     private void printCheckResult() {
         if (latestVersion.equals(currentVersion)) {
             plugin.getLogger().info(String.format("You are using the latest version of %s.", plugin.getName()));
@@ -180,12 +198,16 @@ public class PluginUpdateChecker implements Listener {
         }
     }
 
-    private void checkForUpdate() {
+    private void checkForUpdateAsync() {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            checkForUpdate();
+        });
+    }
+
+    private void checkForUpdate() {
             try {
-                String userAgent = "JEFF-Media-GbR-PluginUpdateChecker/" + VERSION + " (" + plugin.getName() + "/" + plugin.getDescription().getVersion() + ", MC/" + mcVersion + ", Online/" + plugin.getServer().getOnlinePlayers().size() + ", Players/" + plugin.getServer().getOfflinePlayers().length + ")";
                 HttpURLConnection httpcon = (HttpURLConnection) new URL(latestVersionLink).openConnection();
-                httpcon.addRequestProperty("User-Agent", userAgent);
+                httpcon.addRequestProperty("User-Agent", getUserAgent());
                 BufferedReader reader = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
                 latestVersion = reader.readLine().trim();
                 currentVersion = plugin.getDescription().getVersion().trim();
@@ -195,7 +217,6 @@ public class PluginUpdateChecker implements Listener {
             } catch (Exception e) {
                 plugin.getLogger().warning("Could not check for updates.");
             }
-        });
     }
 }
 
