@@ -1,6 +1,8 @@
 # Spigot-UpdateChecker
 Integrate automatic update checks into your own plugin! Automatically prints a console message when an update has been found and sends messages to server operators including a download link and more, if you wish.
 
+![Screenshot](https://api.jeff-media.de/pluginupdatechecker/updatechecker.JPG) ![Screenshot2](https://api.jeff-media.de/pluginupdatechecker/updatechecker2.JPG)
+
 ## Import via maven
 First you need to add the UpdateChecker as a dependency to your pom.xml:
 
