@@ -21,7 +21,7 @@ First you need to add the UpdateChecker as a dependency to your pom.xml:
 </dependencies>
 ```
 
-It is also important to use the maven-shade-plugin as a plugin inside your <plugins> section. Please do not forget to insert your own plugin's package name inside <shadedPattern>.
+It is also important to use the maven-shade-plugin as a plugin inside your `<plugins>` section. Please do not forget to insert your own plugin's package name inside `<shadedPattern>`.
 
 ```
 <plugin>
