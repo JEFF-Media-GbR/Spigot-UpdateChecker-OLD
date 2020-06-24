@@ -55,7 +55,6 @@ You can view an example of a pom.xml containing the above content [HERE](https:/
 ## Usage
 Now you can create an instance of the PluginUpdateChecker class, e.g. in your onEnable method. If a new version has been found, a message will be printed in the console. Every server operator will also be informed when they join the server.
 
-#### Example 1: Async check once every hour
 ```java
 import de.jeff_media.PluginUpdateChecker.PluginUpdateChecker;
 
