@@ -16,7 +16,8 @@ First you need to add the UpdateChecker as a dependency to your pom.xml:
     <dependency>
         <groupId>de.jeff_media</groupId>
 	    <artifactId>PluginUpdateChecker</artifactId>
-	    <version>1.2</version>
+	    <version>[1.3,)</version> <!-- This should always get you the latest version -->
+            <scope>compile</scope>
     </dependency>
 </dependencies>
 ```
@@ -50,7 +51,7 @@ It is also important to use the maven-shade-plugin as a plugin inside your `<plu
 You can view an example of a pom.xml containing the above content [HERE](https://github.com/JEFF-Media-GbR/Spigot-UpdateChecker/blob/master/example-pom.xml).
 
 ## Usage
-Now you can create an instance of the PluginUpdateChecker class, e.g. in your onEnable method:
+Now you can create an instance of the PluginUpdateChecker class, e.g. in your onEnable method. If a new version has been found, a message will be printed in the console. Every server operator will also be informed when they join the server.
 
 ```
 import de.jeff_media.PluginUpdateChecker.PluginUpdateChecker;
@@ -79,16 +80,6 @@ public class MyPlugin extends JavaPlugin implements Listener {
         updateChecker.check();
 
         ...
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent e) {
-    
-        // Send a message to OPs joining the server, if a new version has been found
-        updateChecker.sendUpdateMessage(e.getPlayer());
-
-        ...
-
     }
 }
 ```
