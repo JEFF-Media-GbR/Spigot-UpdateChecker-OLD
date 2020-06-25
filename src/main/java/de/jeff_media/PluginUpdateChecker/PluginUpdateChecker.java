@@ -38,7 +38,7 @@ import java.net.URL;
 public class PluginUpdateChecker implements Listener {
 
 
-    private static final String VERSION = "1.3.0";
+    private static final String VERSION = "1.3.2";
 
     private final Plugin plugin;
     private final String latestVersionLink;

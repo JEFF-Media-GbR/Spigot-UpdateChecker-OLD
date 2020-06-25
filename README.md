@@ -18,7 +18,7 @@ First you need to add the UpdateChecker as a dependency to your pom.xml:
     <dependency>
         <groupId>de.jeff_media</groupId>
 	    <artifactId>PluginUpdateChecker</artifactId>
-	    <version>[1.3,)</version> <!-- This should always get you the latest version -->
+	    <version>1.3.2</version> <!-- Check latest version first -->
             <scope>compile</scope>
     </dependency>
 </dependencies>
