@@ -1,5 +1,10 @@
 package de.jeff_media.PluginUpdateChecker;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -13,11 +18,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 /**
  * Automatic Update-Checker for Bukkit-Plugins.
@@ -35,48 +35,80 @@ import java.net.URL;
  * @author https://github.com/JEFF-Media-GbR
  * @version 1.0
  */
-public class PluginUpdateChecker implements Listener {
-
+public final class PluginUpdateChecker implements Listener {
 
     private static final String VERSION = "1.3.2";
 
+    @NotNull
     private final Plugin plugin;
+
+    @NotNull
     private final String latestVersionLink;
+
+    @Nullable
     private final String downloadLink;
+
+    @Nullable
     private final String changelogLink;
+
+    @Nullable
     private final String donateLink;
+
+    @NotNull
     private final String mcVersion;
+
+    @NotNull
     private String currentVersion = "undefined";
+
+    @NotNull
     private String latestVersion = "undefined";
+
     private int taskId;
 
     /**
      * Creates a new UpdateChecker.
      *
-     * @param plugin            The main class of your plugin
+     * @param plugin The main class of your plugin
      * @param latestVersionLink URL of a text file containing the latest version
-     * @param downloadLink      URL to the download link of your plugin
-     * @param changelogLink     URL to the changelog of your plugin
-     * @param donateLink        URL to a donate link
+     * @param downloadLink URL to the download link of your plugin
+     * @param changelogLink URL to the changelog of your plugin
+     * @param donateLink URL to a donate link
      */
-    public PluginUpdateChecker(@NotNull Plugin plugin, @NotNull String latestVersionLink, @Nullable String downloadLink, @Nullable String changelogLink, @Nullable String donateLink) {
+    public PluginUpdateChecker(@NotNull final Plugin plugin, @NotNull final String latestVersionLink,
+                               @Nullable final String downloadLink, @Nullable final String changelogLink,
+                               @Nullable final String donateLink) {
         this.plugin = plugin;
         this.latestVersionLink = latestVersionLink;
         this.downloadLink = downloadLink;
         this.changelogLink = changelogLink;
         this.donateLink = donateLink;
 
-        String tmpVersion = plugin.getServer().getClass().getPackage().getName();
-        mcVersion = tmpVersion.substring(tmpVersion.lastIndexOf('.') + 1);
-
+        final String tmpVersion = plugin.getServer().getClass().getPackage().getName();
+        this.mcVersion = tmpVersion.substring(tmpVersion.lastIndexOf('.') + 1);
+        
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    @NotNull
+    private static TextComponent createLink(@NotNull final String text, @NotNull final String link) {
+        final ComponentBuilder builder = new ComponentBuilder(text + " Link: ")
+            .bold(true)
+            .append(link)
+            .bold(false);
+        final TextComponent component = new TextComponent(text);
+        component.setBold(true);
+        // TODO: Make color configurable
+        component.setColor(net.md_5.bungee.api.ChatColor.GOLD);
+        component.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, link));
+        component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, builder.create()));
+        return component;
     }
 
     /**
      * Checks for an update
      */
     public void check() {
-        checkForUpdateAsync();
+        this.checkForUpdateAsync();
     }
 
     /**
@@ -85,139 +117,130 @@ public class PluginUpdateChecker implements Listener {
      * @param checkInterval Amount of seconds to wait between each update check
      * @return Task id number (-1 if scheduling failed)
      */
-    public int check(long checkInterval) {
-        taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, this::checkForUpdateAsync, 0L, checkInterval * 20);
-        return taskId;
+    public int check(final long checkInterval) {
+        this.taskId = Bukkit.getScheduler()
+            .scheduleSyncRepeatingTask(this.plugin, this::checkForUpdateAsync, 0L, checkInterval * 20L);
+        return this.taskId;
     }
 
     /**
      * Stops the update checker.
      */
     public void stop() {
-        Bukkit.getScheduler().cancelTask(taskId);
+        Bukkit.getScheduler().cancelTask(this.taskId);
     }
 
     /**
      * Forces a synced update check. You should only use this if you need a check result immediately (e.g. because you want to disable your plugin if there is a new version released) because it will block the main thread until the update check has completed or a timeout occured.
+     *
      * @return true if a new update is available, false if update check failed of this is the current version
      */
     public boolean forceSyncedCheck() {
-        checkForUpdate();
-        return isNewVersionAvailable();
+        this.checkForUpdate();
+        return this.isNewVersionAvailable();
+    }
+
+    @EventHandler
+    public void onOperatorJoin(final PlayerJoinEvent event) {
+        final Player player = event.getPlayer();
+        if (!player.isOp()) {
+            return;
+        }
+        if ("undefined".equals(this.latestVersion) ||
+            this.currentVersion.equals(this.latestVersion)) {
+            return;
+        }
+        player.sendMessage(ChatColor.GRAY + "There is a new version of " + ChatColor.GOLD + this.plugin.getName()
+            + ChatColor.GRAY + " available.");
+        this.sendLinks(player);
+        player.sendMessage(ChatColor.DARK_GRAY + "Your version: " + this.currentVersion + " | Latest version: " + this.latestVersion);
+        player.sendMessage("");
     }
 
     private boolean isNewVersionAvailable() {
-        if(latestVersion.equals("undefined")) return false;
-        return !latestVersion.equals(currentVersion);
+        return !"undefined".equals(this.latestVersion) ||
+            !this.latestVersion.equals(this.currentVersion);
     }
 
-    private TextComponent createLink(String text, String link) {
-        ComponentBuilder hoverCB = new ComponentBuilder(
-                text + " Link: ").bold(true)
-                .append(link).bold(false);
-        TextComponent tc = new TextComponent(text);
-        tc.setBold(true);
-        // TODO: Make color configurable
-        tc.setColor(net.md_5.bungee.api.ChatColor.GOLD);
-        tc.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, link));
-        tc.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverCB.create()));
-        return tc;
-    }
-
-    private void sendLinks(Player p) {
-        TextComponent text = new TextComponent("");
-
-        TextComponent download = createLink("Download", downloadLink);
-        TextComponent donate = createLink("Donate", donateLink);
-        TextComponent changelog = createLink("Changelog", changelogLink);
-
-        TextComponent placeholder = new TextComponent(" | ");
+    private void sendLinks(@NotNull final Player player) {
+        final TextComponent text = new TextComponent("");
+        final TextComponent download = PluginUpdateChecker.createLink("Download", this.downloadLink);
+        final TextComponent donate = PluginUpdateChecker.createLink("Donate", this.donateLink);
+        final TextComponent changelog = PluginUpdateChecker.createLink("Changelog", this.changelogLink);
+        final TextComponent placeholder = new TextComponent(" | ");
         placeholder.setColor(net.md_5.bungee.api.ChatColor.GRAY);
-
         int components = 0;
-        if (downloadLink != null) components++;
-        if (donateLink != null) components++;
-        if (changelogLink != null) components++;
-
-        if (downloadLink != null) {
+        if (this.downloadLink != null) {
+            components++;
+        }
+        if (this.donateLink != null) {
+            components++;
+        }
+        if (this.changelogLink != null) {
+            components++;
+        }
+        if (this.downloadLink != null) {
             text.addExtra(download);
             if (components > 1) {
                 text.addExtra(placeholder);
             }
             components--;
         }
-
-        if (donateLink != null) {
+        if (this.donateLink != null) {
             text.addExtra(donate);
             if (components > 1) {
                 text.addExtra(placeholder);
             }
             components--;
         }
-
-        if (changelogLink != null) {
+        if (this.changelogLink != null) {
             text.addExtra(changelog);
         }
-
-        p.spigot().sendMessage(text);
+        player.spigot().sendMessage(text);
     }
 
-    @EventHandler
-    public void onOperatorJoin(PlayerJoinEvent event) {
-        Player p = event.getPlayer();
-        if (!p.isOp()) return;
-
-        if (!latestVersion.equals("undefined")) {
-            if (!currentVersion.equals(latestVersion)) {
-                p.sendMessage(ChatColor.GRAY + "There is a new version of " + ChatColor.GOLD + plugin.getName()
-                        + ChatColor.GRAY + " available.");
-                sendLinks(p);
-                p.sendMessage(ChatColor.DARK_GRAY + "Your version: " + currentVersion + " | Latest version: " + latestVersion);
-                p.sendMessage("");
-            }
-        }
-    }
-
+    @NotNull
     private String getUserAgent() {
-        return "JEFF-Media-GbR-PluginUpdateChecker/" + VERSION + " (" + plugin.getName() + "/" + plugin.getDescription().getVersion() + ", MC/" + mcVersion + ", Online/" + plugin.getServer().getOnlinePlayers().size() + ", Players/" + plugin.getServer().getOfflinePlayers().length + ")";
+        return "JEFF-Media-GbR-PluginUpdateChecker/" + PluginUpdateChecker.VERSION + " (" + this.plugin.getName() +
+            '/' + this.plugin.getDescription().getVersion() + ", MC/" + this.mcVersion + ", Online/" +
+            this.plugin.getServer().getOnlinePlayers().size() + ", Players/" +
+            this.plugin.getServer().getOfflinePlayers().length + ')';
     }
 
     private void printCheckResult() {
-        if (latestVersion.equals(currentVersion)) {
-            plugin.getLogger().info(String.format("You are using the latest version of %s.", plugin.getName()));
-        } else {
-            plugin.getLogger().warning("=================================================");
-            plugin.getLogger().warning(String.format("There is a new version of %s available!", plugin.getName()));
-            plugin.getLogger().warning("Latest : " + latestVersion);
-            plugin.getLogger().warning("Current: " + currentVersion);
-            if (downloadLink != null) {
-                plugin.getLogger().warning("Please update to the newest version. Download:");
-                plugin.getLogger().warning(downloadLink);
-            }
-            plugin.getLogger().warning("=================================================");
+        if (this.latestVersion.equals(this.currentVersion)) {
+            this.plugin.getLogger().info(String.format("You are using the latest version of %s.", this.plugin.getName()));
+            return;
         }
+        this.plugin.getLogger().warning("=================================================");
+        this.plugin.getLogger().warning(String.format("There is a new version of %s available!", this.plugin.getName()));
+        this.plugin.getLogger().warning("Latest : " + this.latestVersion);
+        this.plugin.getLogger().warning("Current: " + this.currentVersion);
+        if (this.downloadLink != null) {
+            this.plugin.getLogger().warning("Please update to the newest version. Download:");
+            this.plugin.getLogger().warning(this.downloadLink);
+        }
+        this.plugin.getLogger().warning("=================================================");
     }
 
     private void checkForUpdateAsync() {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            checkForUpdate();
-        });
+        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, this::checkForUpdate);
     }
 
     private void checkForUpdate() {
-            try {
-                HttpURLConnection httpcon = (HttpURLConnection) new URL(latestVersionLink).openConnection();
-                httpcon.addRequestProperty("User-Agent", getUserAgent());
-                BufferedReader reader = new BufferedReader(new InputStreamReader(httpcon.getInputStream()));
-                latestVersion = reader.readLine().trim();
-                currentVersion = plugin.getDescription().getVersion().trim();
-                Bukkit.getScheduler().runTask(plugin, this::printCheckResult);
-                //printCheckResult();
-                reader.close();
-            } catch (Exception e) {
-                plugin.getLogger().warning("Could not check for updates.");
-            }
+        try {
+            final HttpURLConnection httpcon = (HttpURLConnection) new URL(this.latestVersionLink).openConnection();
+            httpcon.addRequestProperty("User-Agent", this.getUserAgent());
+            final InputStreamReader input = new InputStreamReader(httpcon.getInputStream());
+            final BufferedReader reader = new BufferedReader(input);
+            this.latestVersion = reader.readLine().trim();
+            this.currentVersion = this.plugin.getDescription().getVersion().trim();
+            Bukkit.getScheduler().runTask(this.plugin, this::printCheckResult);
+            //printCheckResult();
+            reader.close();
+        } catch (final IOException ioException) {
+            this.plugin.getLogger().warning("Could not check for updates.");
+        }
     }
+
 }
-
-
