@@ -39,20 +39,28 @@ public final class PluginUpdateChecker implements Listener {
 
     private static final String VERSION = "1.3.2";
 
+    @NotNull
     private final Plugin plugin;
 
+    @NotNull
     private final String latestVersionLink;
 
+    @Nullable
     private final String downloadLink;
 
+    @Nullable
     private final String changelogLink;
 
+    @Nullable
     private final String donateLink;
 
+    @NotNull
     private final String mcVersion;
 
+    @NotNull
     private String currentVersion = "undefined";
 
+    @NotNull
     private String latestVersion = "undefined";
 
     private int taskId;
@@ -77,7 +85,7 @@ public final class PluginUpdateChecker implements Listener {
 
         final String tmpVersion = plugin.getServer().getClass().getPackage().getName();
         this.mcVersion = tmpVersion.substring(tmpVersion.lastIndexOf('.') + 1);
-
+        
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
