@@ -9,6 +9,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -37,7 +38,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class PluginUpdateChecker implements Listener {
 
-    private static final String VERSION = "1.3.2";
+    private static final String VERSION = "1.4.0";
 
     @NotNull
     private final Plugin plugin;
@@ -47,6 +48,9 @@ public final class PluginUpdateChecker implements Listener {
 
     @Nullable
     private final String downloadLink;
+
+    @Nullable
+    private String downloadLinkFree;
 
     @Nullable
     private final String changelogLink;
@@ -63,6 +67,11 @@ public final class PluginUpdateChecker implements Listener {
     @NotNull
     private String latestVersion = "undefined";
 
+    @NotNull
+    private String parsnip = "%%__USER__%%";
+
+    private boolean usingPaidVersion;
+
     private int taskId;
 
     /**
@@ -75,13 +84,15 @@ public final class PluginUpdateChecker implements Listener {
      * @param donateLink URL to a donate link
      */
     public PluginUpdateChecker(@NotNull final Plugin plugin, @NotNull final String latestVersionLink,
-                               @Nullable final String downloadLink, @Nullable final String changelogLink,
-                               @Nullable final String donateLink) {
+                               @Nullable final String downloadLink, @Nullable String downloadLinkFree, @Nullable final String changelogLink,
+                               @Nullable final String donateLink, boolean usingPaidVersion) {
         this.plugin = plugin;
         this.latestVersionLink = latestVersionLink;
         this.downloadLink = downloadLink;
+        this.downloadLinkFree = downloadLinkFree;
         this.changelogLink = changelogLink;
         this.donateLink = donateLink;
+        this.usingPaidVersion = usingPaidVersion;
 
         final String tmpVersion = plugin.getServer().getClass().getPackage().getName();
         this.mcVersion = tmpVersion.substring(tmpVersion.lastIndexOf('.') + 1);
@@ -164,13 +175,24 @@ public final class PluginUpdateChecker implements Listener {
 
     private void sendLinks(@NotNull final Player player) {
         final TextComponent text = new TextComponent("");
-        final TextComponent download = PluginUpdateChecker.createLink("Download", this.downloadLink);
+        final TextComponent download;
+        final TextComponent downloadFree;
+        if(downloadLinkFree==null || usingPaidVersion) {
+            download = null;
+            downloadFree = PluginUpdateChecker.createLink("Download", this.downloadLink);
+        } else {
+            download = PluginUpdateChecker.createLink("Download (Plus)",this.downloadLink);
+            downloadFree = PluginUpdateChecker.createLink("Download (Free)",this.downloadLinkFree);
+        }
         final TextComponent donate = PluginUpdateChecker.createLink("Donate", this.donateLink);
         final TextComponent changelog = PluginUpdateChecker.createLink("Changelog", this.changelogLink);
         final TextComponent placeholder = new TextComponent(" | ");
         placeholder.setColor(net.md_5.bungee.api.ChatColor.GRAY);
         int components = 0;
         if (this.downloadLink != null) {
+            components++;
+        }
+        if (this.downloadLinkFree != null) {
             components++;
         }
         if (this.donateLink != null) {
@@ -181,6 +203,13 @@ public final class PluginUpdateChecker implements Listener {
         }
         if (this.downloadLink != null) {
             text.addExtra(download);
+            if (components > 1) {
+                text.addExtra(placeholder);
+            }
+            components--;
+        }
+        if (this.downloadLinkFree != null) {
+            text.addExtra(downloadFree);
             if (components > 1) {
                 text.addExtra(placeholder);
             }
@@ -200,11 +229,19 @@ public final class PluginUpdateChecker implements Listener {
     }
 
     @NotNull
+    private String getUserId() {
+        return StringUtils.isNumeric(parsnip) ? String.valueOf(Integer.valueOf(parsnip)) : "none";
+    }
+
+    @NotNull
     private String getUserAgent() {
         return "JEFF-Media-GbR-PluginUpdateChecker/" + PluginUpdateChecker.VERSION + " (" + this.plugin.getName() +
-            '/' + this.plugin.getDescription().getVersion() + ", MC/" + this.mcVersion + ", Online/" +
-            this.plugin.getServer().getOnlinePlayers().size() + ", Players/" +
-            this.plugin.getServer().getOfflinePlayers().length + ')';
+            '/' + this.plugin.getDescription().getVersion()
+                + ", MC/" + this.mcVersion
+                + ", Online/" + this.plugin.getServer().getOnlinePlayers().size()
+                + ", Players/" + this.plugin.getServer().getOfflinePlayers().length
+                + ", Plus/" + (usingPaidVersion ? "yes" : "no")
+                + ", UserID/" + getUserId() + ')';
     }
 
     private void printCheckResult() {
