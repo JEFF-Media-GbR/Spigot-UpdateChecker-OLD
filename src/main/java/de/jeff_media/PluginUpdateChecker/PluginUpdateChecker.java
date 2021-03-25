@@ -38,7 +38,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class PluginUpdateChecker implements Listener {
 
-    private static final String VERSION = "1.4.0";
+    private static final String VERSION = "1.5.4";
 
     @NotNull
     private final Plugin plugin;
@@ -157,6 +157,10 @@ public final class PluginUpdateChecker implements Listener {
         if (!player.isOp()) {
             return;
         }
+        sendUpdateMessageToPlayer(player);
+    }
+
+    private void sendUpdateMessageToPlayer(Player player) {
         if ("undefined".equals(this.latestVersion) ||
             this.currentVersion.equals(this.latestVersion)) {
             return;
@@ -201,7 +205,7 @@ public final class PluginUpdateChecker implements Listener {
         if (this.changelogLink != null) {
             components++;
         }
-        if (this.downloadLink != null) {
+        if (this.downloadLink != null && download != null) {
             text.addExtra(download);
             if (components > 1) {
                 text.addExtra(placeholder);
@@ -254,8 +258,19 @@ public final class PluginUpdateChecker implements Listener {
         this.plugin.getLogger().warning("Latest : " + this.latestVersion);
         this.plugin.getLogger().warning("Current: " + this.currentVersion);
         if (this.downloadLink != null) {
-            this.plugin.getLogger().warning("Please update to the newest version. Download:");
-            this.plugin.getLogger().warning(this.downloadLink);
+            this.plugin.getLogger().warning("Please update to the newest version.");
+            this.plugin.getLogger().warning(" ");
+            if(usingPaidVersion || downloadLinkFree==null) {
+                this.plugin.getLogger().warning("Download:");
+                this.plugin.getLogger().warning(this.downloadLink);
+            } else {
+                this.plugin.getLogger().warning("Download (Plus):");
+                this.plugin.getLogger().warning(this.downloadLink);
+                this.plugin.getLogger().warning(" ");
+                this.plugin.getLogger().warning("Download (Free):");
+                this.plugin.getLogger().warning(this.downloadLinkFree);
+            }
+
         }
         this.plugin.getLogger().warning("=================================================");
     }
@@ -264,7 +279,7 @@ public final class PluginUpdateChecker implements Listener {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, this::checkForUpdate);
     }
 
-    private void checkForUpdate() {
+    public void checkForUpdate() {
         try {
             final HttpURLConnection httpcon = (HttpURLConnection) new URL(this.latestVersionLink).openConnection();
             httpcon.addRequestProperty("User-Agent", this.getUserAgent());
