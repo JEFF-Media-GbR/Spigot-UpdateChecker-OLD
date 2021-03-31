@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import de.jeff_media.PluginUpdateChecker.events.UpdateCheckFinishedEvent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -12,6 +14,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -118,8 +121,8 @@ public final class PluginUpdateChecker implements Listener {
     /**
      * Checks for an update
      */
-    public void check() {
-        this.checkForUpdateAsync();
+    public void check(CommandSender requester) {
+        this.checkForUpdateAsync(requester);
     }
 
     /**
@@ -128,9 +131,9 @@ public final class PluginUpdateChecker implements Listener {
      * @param checkInterval Amount of seconds to wait between each update check
      * @return Task id number (-1 if scheduling failed)
      */
-    public int check(final long checkInterval) {
+    public int check(final long checkInterval, CommandSender requester) {
         this.taskId = Bukkit.getScheduler()
-            .scheduleSyncRepeatingTask(this.plugin, this::checkForUpdateAsync, 0L, checkInterval * 20L);
+            .scheduleSyncRepeatingTask(this.plugin, () -> checkForUpdateAsync(requester), 0L, checkInterval * 20L);
         return this.taskId;
     }
 
@@ -146,8 +149,8 @@ public final class PluginUpdateChecker implements Listener {
      *
      * @return true if a new update is available, false if update check failed of this is the current version
      */
-    public boolean forceSyncedCheck() {
-        this.checkForUpdate();
+    public boolean forceSyncedCheck(CommandSender requester) {
+        this.checkForUpdate(requester);
         return this.isNewVersionAvailable();
     }
 
@@ -275,11 +278,11 @@ public final class PluginUpdateChecker implements Listener {
         this.plugin.getLogger().warning("=================================================");
     }
 
-    private void checkForUpdateAsync() {
-        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, this::checkForUpdate);
+    private void checkForUpdateAsync(@Nullable CommandSender requester) {
+        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> checkForUpdate(requester));
     }
 
-    public void checkForUpdate() {
+    public void checkForUpdate(@Nullable CommandSender requester) {
         try {
             final HttpURLConnection httpcon = (HttpURLConnection) new URL(this.latestVersionLink).openConnection();
             httpcon.addRequestProperty("User-Agent", this.getUserAgent());
@@ -290,6 +293,7 @@ public final class PluginUpdateChecker implements Listener {
             Bukkit.getScheduler().runTask(this.plugin, this::printCheckResult);
             //printCheckResult();
             reader.close();
+            UpdateCheckFinishedEvent updateCheckFinishedEvent = new UpdateCheckFinishedEvent(!latestVersion.equals(currentVersion), latestVersion, requester);
         } catch (final IOException ioException) {
             this.plugin.getLogger().warning("Could not check for updates.");
         }

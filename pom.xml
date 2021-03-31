@@ -6,7 +6,7 @@
 
     <groupId>de.jeff_media</groupId>
     <artifactId>PluginUpdateChecker</artifactId>
-    <version>1.5.4</version>
+    <version>1.6.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -63,7 +63,7 @@
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>19.0.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
