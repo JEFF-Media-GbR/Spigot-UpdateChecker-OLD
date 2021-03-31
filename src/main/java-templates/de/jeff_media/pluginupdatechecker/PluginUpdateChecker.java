@@ -1,4 +1,4 @@
-package de.jeff_media.PluginUpdateChecker;
+package de.jeff_media.pluginupdatechecker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import de.jeff_media.PluginUpdateChecker.events.UpdateCheckFinishedEvent;
+import de.jeff_media.pluginupdatechecker.events.UpdateCheckFinishedEvent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -41,7 +41,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class PluginUpdateChecker implements Listener {
 
-    private static final String VERSION = "1.5.4";
+    private static final String VERSION = "${project.version}";
 
     @NotNull
     private final Plugin plugin;

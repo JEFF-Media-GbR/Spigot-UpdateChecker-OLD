@@ -1,4 +1,4 @@
-package de.jeff_media.PluginUpdateChecker.events;
+package de.jeff_media.pluginupdatechecker.events;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event;
