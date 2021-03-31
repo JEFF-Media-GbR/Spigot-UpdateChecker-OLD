@@ -294,6 +294,7 @@ public final class PluginUpdateChecker implements Listener {
             //printCheckResult();
             reader.close();
             UpdateCheckFinishedEvent updateCheckFinishedEvent = new UpdateCheckFinishedEvent(!latestVersion.equals(currentVersion), latestVersion, requester);
+            Bukkit.getPluginManager().callEvent(updateCheckFinishedEvent);
         } catch (final IOException ioException) {
             this.plugin.getLogger().warning("Could not check for updates.");
         }
