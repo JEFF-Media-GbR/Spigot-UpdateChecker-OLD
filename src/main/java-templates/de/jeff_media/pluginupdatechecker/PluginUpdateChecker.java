@@ -282,7 +282,7 @@ public final class PluginUpdateChecker implements Listener {
         Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> checkForUpdate(requester));
     }
 
-    public void checkForUpdate(@Nullable CommandSender requester) {
+    private void checkForUpdate(@Nullable CommandSender requester) {
         try {
             final HttpURLConnection httpcon = (HttpURLConnection) new URL(this.latestVersionLink).openConnection();
             httpcon.addRequestProperty("User-Agent", this.getUserAgent());
@@ -293,6 +293,7 @@ public final class PluginUpdateChecker implements Listener {
             Bukkit.getScheduler().runTask(this.plugin, this::printCheckResultToConsole);
             //printCheckResultToConsole();
             reader.close();
+            //System.out.println("Calling Event");
             UpdateCheckFinishedEvent updateCheckFinishedEvent = new UpdateCheckFinishedEvent(plugin,!latestVersion.equals(currentVersion), latestVersion, requester);
             Bukkit.getScheduler().runTask(plugin, () -> Bukkit.getPluginManager().callEvent(updateCheckFinishedEvent));
         } catch (final IOException ioException) {
