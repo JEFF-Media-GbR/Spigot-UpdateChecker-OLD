@@ -3,12 +3,14 @@ package de.jeff_media.PluginUpdateChecker.events;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class UpdateCheckFinishedEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
+    private final @NotNull Plugin plugin;
     private final boolean newVersionAvailable;
     private final String newestVersion;
     private final @Nullable CommandSender requester;
@@ -34,7 +36,12 @@ public class UpdateCheckFinishedEvent extends Event {
         return requester;
     }
 
-    public UpdateCheckFinishedEvent(boolean newVersionAvailable, String newestVersion, @Nullable CommandSender requester) {
+    public @NotNull Plugin getPlugin() {
+        return plugin;
+    }
+
+    public UpdateCheckFinishedEvent(@NotNull Plugin plugin, boolean newVersionAvailable, String newestVersion, @Nullable CommandSender requester) {
+        this.plugin = plugin;
         this.newestVersion = newestVersion;
         this.newVersionAvailable = newVersionAvailable;
         this.requester = requester;

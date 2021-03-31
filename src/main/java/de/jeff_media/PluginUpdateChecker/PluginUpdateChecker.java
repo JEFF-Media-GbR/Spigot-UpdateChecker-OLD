@@ -251,7 +251,7 @@ public final class PluginUpdateChecker implements Listener {
                 + ", UserID/" + getUserId() + ')';
     }
 
-    private void printCheckResult() {
+    public void printCheckResultToConsole() {
         if (this.latestVersion.equals(this.currentVersion)) {
             this.plugin.getLogger().info(String.format("You are using the latest version of %s.", this.plugin.getName()));
             return;
@@ -290,10 +290,10 @@ public final class PluginUpdateChecker implements Listener {
             final BufferedReader reader = new BufferedReader(input);
             this.latestVersion = reader.readLine().trim();
             this.currentVersion = this.plugin.getDescription().getVersion().trim();
-            Bukkit.getScheduler().runTask(this.plugin, this::printCheckResult);
-            //printCheckResult();
+            Bukkit.getScheduler().runTask(this.plugin, this::printCheckResultToConsole);
+            //printCheckResultToConsole();
             reader.close();
-            UpdateCheckFinishedEvent updateCheckFinishedEvent = new UpdateCheckFinishedEvent(!latestVersion.equals(currentVersion), latestVersion, requester);
+            UpdateCheckFinishedEvent updateCheckFinishedEvent = new UpdateCheckFinishedEvent(plugin,!latestVersion.equals(currentVersion), latestVersion, requester);
             Bukkit.getPluginManager().callEvent(updateCheckFinishedEvent);
         } catch (final IOException ioException) {
             this.plugin.getLogger().warning("Could not check for updates.");
