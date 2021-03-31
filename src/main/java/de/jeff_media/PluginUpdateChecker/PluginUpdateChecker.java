@@ -163,7 +163,7 @@ public final class PluginUpdateChecker implements Listener {
         sendUpdateMessageToPlayer(player);
     }
 
-    private void sendUpdateMessageToPlayer(Player player) {
+    public void sendUpdateMessageToPlayer(Player player) {
         if ("undefined".equals(this.latestVersion) ||
             this.currentVersion.equals(this.latestVersion)) {
             return;
